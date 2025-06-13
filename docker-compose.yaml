@@ -1,0 +1,33 @@
+
+services:
+  auth:
+    build: ./auth-service
+    container_name: auth_service
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_started
+    environment:
+      DB_USER: authuser
+      DB_PASSWORD: authpass
+      DB_NAME: authdb
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_URL: postgres://authuser:authpass@postgres:5432/authdb?sslmode=disable
+  db:
+    image: postgres:16
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: authuser
+      POSTGRES_PASSWORD: authpass
+      POSTGRES_DB: authdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+
+volumes:
+  pgdata:
