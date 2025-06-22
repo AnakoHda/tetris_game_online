@@ -9,7 +9,7 @@ import (
 	"auth-service/internal/storage/postgres"
 	"auth-service/pkg/tokenManager/jwtManager"
 	"github.com/gin-gonic/gin"
-	"log"
+	"log/slog"
 	"os"
 )
 
@@ -18,7 +18,8 @@ func main() {
 
 	db, err := postgres.InitPostgres()
 	if err != nil {
-		log.Fatal("failed to connect DB:", err)
+		slog.Error("failed to connect to DB", "error", err)
+		os.Exit(1)
 	}
 	repo := postgres.NewPostgresRepository(db)
 
@@ -32,8 +33,8 @@ func main() {
 
 	handler.RegisterRoutes(r, aHandler, uHandler)
 
-	// Запуск
 	if err := r.Run(":8080"); err != nil {
-		log.Fatal(err)
+		slog.Error("failed Run ", "error", err)
 	}
+	slog.Info("auth-service started", "port", 8080)
 }

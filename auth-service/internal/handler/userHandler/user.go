@@ -27,7 +27,7 @@ func (h *UserHandler) Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"message": "userHandler registered"})
+	c.JSON(http.StatusCreated, gin.H{"message": "user registered"})
 }
 
 func (h *UserHandler) Update(c *gin.Context) {

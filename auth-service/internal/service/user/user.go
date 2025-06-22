@@ -22,12 +22,19 @@ func (us *Service) Register(req service.RegisterRequest) error {
 		return err
 	}
 
-	exists, err := us.repo.ExistsByEmail(req.Email)
+	exists, err := us.repo.EmailExists(req.Email)
 	if err != nil {
 		return fmt.Errorf("failed to check email: %w", err)
 	}
 	if exists {
-		return errors.New("userHandler already exists")
+		return errors.New("email already exists")
+	}
+	exists1, err := us.repo.NicknameExists(req.Nickname)
+	if err != nil {
+		return fmt.Errorf("failed to check nickname: %w", err)
+	}
+	if exists1 {
+		return errors.New("nickname already exists")
 	}
 
 	if err := validator.ValidatePassword(req.Password); err != nil {
@@ -56,7 +63,7 @@ func (us *Service) Update(email string, newNickname string, newPassword string) 
 
 	user, err := us.repo.GetByEmail(email)
 	if err != nil {
-		return fmt.Errorf("userHandler not found: %w", err)
+		return fmt.Errorf("user not found: %w", err)
 	}
 
 	user.Nickname = newNickname

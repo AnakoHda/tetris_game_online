@@ -26,7 +26,7 @@ func (as *Service) Login(req service.LoginRequest) (string, error) {
 
 	user, err := as.repo.GetByEmail(req.Email)
 	if err != nil {
-		return "", fmt.Errorf("userHandler not found: %w", err)
+		return "", fmt.Errorf("user not found: %w", err)
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
@@ -42,7 +42,7 @@ func (as *Service) Login(req service.LoginRequest) (string, error) {
 }
 
 func (as *Service) ValidateToken(token string) (bool, error) {
-	
+
 	_, err := as.tokenManager.ParseToken(token)
 	if err != nil {
 		return false, fmt.Errorf("invalid token: %w", err)
