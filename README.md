@@ -93,15 +93,23 @@ touch .env
 ### 3. Заполни переменные окружения :
 *Вставь шаблон в `.env` и заполни своими значениями после `=`*
 ```bash
-DB_USER=      # имя пользователя базы данных
-DB_PASSWORD=  # пароль пользователя
-DB_NAME=      # название базы данных
-DB_HOST=      # имя сервиса базы данных в docker-compose (по умолчанию: postgres)
-DB_PORT=      # порт для подключения к БД (по умолчанию: 5432)
-MAIL_USERNAME=# email для отправки уведомлений
-MAIL_PASSWORD=# пароль приложения (не аккаунта!)
-DB_URL=       # URL подключения к базе данных PostgreSQL
-JWT_SECRET=   # секретный ключ для создания токенов
+DB_USER=                  # имя пользователя базы данных
+DB_PASSWORD=              # пароль пользователя
+DB_NAME=                  # название базы данных
+DB_HOST=                  # имя сервиса базы данных в docker-compose (по умолчанию: postgres)
+DB_PORT=                  # порт для подключения к БД (по умолчанию: 5432)
+MAIL_USERNAME=            # email для отправки уведомлений
+MAIL_PASSWORD=            # пароль приложения (не аккаунта!)
+DB_URL=                   # URL подключения к базе данных PostgreSQL
+JWT_SECRET=               # секретный ключ для создания токенов
+MAIL_USERNAME=            # email-аккаунт, с которого отправляются уведомления
+MAIL_PASSWORD=            # пароль приложения
+MAIL_HOST=                # SMTP-сервер (например, smtp.gmail.com)
+MAIL_PORT=                # порт SMTP-сервера (обычно 587 для TLS или 465 для SSL)
+KAFKA_BROKERS=            # адреса брокеров Kafka, через запятую (например: kafka:9092)
+KAFKA_HALLO_TOPIC=        # Kafka-топик для приветственных email-сообщений
+KAFKA_SCORE_UPDATE_TOPIC= # Kafka-топик для обновлений лидерборда
+KAFKA_GROUP_ID=           # ID Kafka consumer-группы
 ```
 ### 4. Запуск приложения:
 ```bash

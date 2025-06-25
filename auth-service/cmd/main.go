@@ -1,10 +1,12 @@
 package main
 
 import (
+	"auth-service/internal/config"
 	"auth-service/internal/handler"
 	"auth-service/internal/handler/authHandler"
 	"auth-service/internal/handler/userHandler"
 	"auth-service/internal/service/auth"
+	"auth-service/internal/service/kafkaProduser"
 	"auth-service/internal/service/user"
 	"auth-service/internal/storage/postgres"
 	"auth-service/pkg/tokenManager/jwtManager"
@@ -16,20 +18,30 @@ import (
 func main() {
 	r := gin.Default()
 
-	db, err := postgres.InitPostgres()
+	if err := config.ParseEnvironment(); err != nil {
+		slog.Error("parse environment", "error", err)
+		os.Exit(1)
+	}
+
+	db, err := postgres.InitPostgres(os.Getenv("DB_URL"))
 	if err != nil {
-		slog.Error("failed to connect to DB", "error", err)
+		slog.Error("init postgres", "error", err)
 		os.Exit(1)
 	}
 	repo := postgres.NewPostgresRepository(db)
 
 	tokenManager := jwtManager.NewJwtTokenManager(os.Getenv("JWT_SECRET"))
 
+	broker := os.Getenv("KAFKA_BROKERS")
+	topics := os.Getenv("KAFKA_HALLO_TOPIC")
+
+	producer := kafka.NewKafkaProducer(broker, topics)
+
 	authService := auth.NewAuthService(repo, tokenManager)
 	userService := user.NewUserService(repo)
 
 	aHandler := authHandler.NewAuthHandler(authService)
-	uHandler := userHandler.NewUserHandler(userService)
+	uHandler := userHandler.NewUserHandler(userService, producer)
 
 	handler.RegisterRoutes(r, aHandler, uHandler)
 

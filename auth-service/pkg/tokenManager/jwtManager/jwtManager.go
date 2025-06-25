@@ -36,6 +36,5 @@ func (tm *JwtManager) ParseToken(tokenStr string) (jwt.MapClaims, error) {
 	if !ok {
 		return nil, errors.New("invalid claims")
 	}
-
 	return claims, nil
 }

@@ -1,6 +1,7 @@
 package kafka
 
 import (
+	"auth-service/internal/models"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -27,9 +28,9 @@ func NewKafkaProducer(brokerAddress, topic string) *Producer {
 }
 
 func (k *Producer) SendWelcomeEmail(email, nickname string) error {
-	msg := map[string]string{
-		"email":    email,
-		"nickname": nickname,
+	msg := models.WelcomeEmail{
+		Email:    email,
+		Nickname: nickname,
 	}
 	value, err := json.Marshal(msg)
 	if err != nil {

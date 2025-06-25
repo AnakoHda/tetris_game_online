@@ -5,9 +5,9 @@ import (
 	"auth-service/internal/storage"
 	"auth-service/pkg/tokenManager"
 	"auth-service/pkg/validator"
-	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"log/slog"
 )
 
 type Service struct {
@@ -21,32 +21,32 @@ func NewAuthService(repo storage.Repository, tokenManager tokenManager.TokenMana
 
 func (as *Service) Login(req service.LoginRequest) (string, error) {
 	if err := validator.ValidateEmail(req.Email); err != nil {
-		return "", err
+		slog.Warn("validate email failed", "err", err)
+		return "", fmt.Errorf("uncorrect email format")
 	}
-
 	user, err := as.repo.GetByEmail(req.Email)
 	if err != nil {
-		return "", fmt.Errorf("user not found: %w", err)
+		slog.Error("failed to get user by", "email", req.Email, "err", err)
+		return "", fmt.Errorf("user not found")
 	}
-
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return "", errors.New("invalid password")
+		slog.Error("failed compare hash and pass", "err", err)
+		return "", fmt.Errorf("invalid email or password")
 	}
 
 	token, err := as.tokenManager.GenerateToken(user.ID, user.Email)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate token: %w", err)
+		slog.Error("failed generate token", "err", err)
+		return "", fmt.Errorf("server error")
 	}
-
 	return token, nil
 }
 
 func (as *Service) ValidateToken(token string) (bool, error) {
-
 	_, err := as.tokenManager.ParseToken(token)
 	if err != nil {
-		return false, fmt.Errorf("invalid token: %w", err)
-	}
 
+		return false, fmt.Errorf("fail validate token: %w", err)
+	}
 	return true, nil
 }

@@ -2,7 +2,7 @@
 services:
   auth:
     build: ./auth-service
-    container_name: auth_service
+    container_name: auth-service
     ports:
       - "8080:8080"
     depends_on:
@@ -16,6 +16,27 @@ services:
       DB_PORT: ${DB_PORT}
       JWT_SECRET: ${JWT_SECRET}
       DB_URL: ${DB_URL}
+
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_HALLO_TOPIC: ${KAFKA_HALLO_TOPIC}
+
+  mail:
+    build: ./mail-service
+    container_name: mail-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - kafka
+    environment:
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_PORT: ${MAIL_PORT}
+      KAFKA_BROKERS: ${KAFKA_BROKERS}
+      KAFKA_HALLO_TOPIC: ${KAFKA_HALLO_TOPIC}
+      KAFKA_SCORE_UPDATE_TOPIC: ${KAFKA_SCORE_UPDATE_TOPIC}
+      KAFKA_GROUP_ID: ${KAFKA_GROUP_ID}
+
   db:
     image: postgres:16
     container_name: postgres
@@ -29,6 +50,29 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://${KAFKA_BROKERS}
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
 volumes:
   pgdata:

@@ -19,8 +19,8 @@ COPY --from=builder /app/auth-service .
 
 COPY --from=builder /usr/bin/migrate /usr/bin/migrate
 COPY ./migrations ./migrations
-ENV DB_URL=""
+COPY .env .
+
 
 EXPOSE 8080
 CMD migrate -path ./migrations -database "$DB_URL" up && ./auth-service
-#CMD ["./auth-service"]

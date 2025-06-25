@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"golang.org/x/crypto/bcrypt"
+	"log/slog"
 )
 
 type Service struct {
@@ -24,17 +25,21 @@ func (us *Service) Register(req service.RegisterRequest) error {
 
 	exists, err := us.repo.EmailExists(req.Email)
 	if err != nil {
-		return fmt.Errorf("failed to check email: %w", err)
+		slog.Error("failed check email exists", "err", err)
+		return fmt.Errorf("server error")
 	}
 	if exists {
+		slog.Warn("nickname already exists")
 		return errors.New("email already exists")
 	}
 	exists1, err := us.repo.NicknameExists(req.Nickname)
 	if err != nil {
-		return fmt.Errorf("failed to check nickname: %w", err)
+		slog.Error("failed check nickname exists", "err", err)
+		return fmt.Errorf("server error")
 	}
 	if exists1 {
-		return errors.New("nickname already exists")
+		slog.Warn("nickname already exists")
+		return fmt.Errorf("nickname already exists")
 	}
 
 	if err := validator.ValidatePassword(req.Password); err != nil {
@@ -42,7 +47,8 @@ func (us *Service) Register(req service.RegisterRequest) error {
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return fmt.Errorf("failed to hash password: %w", err)
+		slog.Error("failed generate from pass", "err", err)
+		return fmt.Errorf("server error")
 	}
 
 	user := models.User{
@@ -50,31 +56,49 @@ func (us *Service) Register(req service.RegisterRequest) error {
 		Nickname: req.Nickname,
 		Password: string(hashedPassword),
 	}
-
-	return us.repo.Save(user)
+	err = us.repo.Save(user)
+	if err != nil {
+		slog.Error("failed save", "user", user.Email, "err", err)
+		return fmt.Errorf("server error")
+	}
+	return nil
 }
 
 func (us *Service) Update(email string, newNickname string, newPassword string) error {
-	if newPassword != "" {
-		if err := validator.ValidatePassword(newPassword); err != nil {
-			return err
-		}
+	exists, err := us.repo.NicknameExists(newNickname)
+	if err != nil {
+		slog.Error("failed check nickname exists", "err", err)
+		return fmt.Errorf("server error")
+	}
+	if exists {
+		slog.Warn("nickname already exists")
+		return fmt.Errorf("new nickname already exists")
+	}
+
+	if err := validator.ValidatePassword(newPassword); err != nil {
+		slog.Warn("failed validate password", "err", err)
+		return fmt.Errorf("new %w", err)
 	}
 
 	user, err := us.repo.GetByEmail(email)
 	if err != nil {
-		return fmt.Errorf("user not found: %w", err)
+		slog.Error("failed to get user by ", "err", err)
+		return fmt.Errorf("server error")
 	}
 
 	user.Nickname = newNickname
 
-	if newPassword != "" {
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
-		if err != nil {
-			return fmt.Errorf("failed to hash password: %w", err)
-		}
-		user.Password = string(hashedPassword)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		slog.Error("failed generate from pass", "err", err)
+		return fmt.Errorf("server error")
 	}
+	user.Password = string(hashedPassword)
 
-	return us.repo.Update(user)
+	err = us.repo.Update(user)
+	if err != nil {
+		slog.Error("failed update db", "user", user.Email, "err", err)
+		return fmt.Errorf("server error")
+	}
+	return nil
 }
